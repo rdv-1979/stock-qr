@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Escanear Producto</title>
+  <script src="js/html5-qrcode.min.js"></script>
+  <link rel="stylesheet" href="./css/estilos.css">
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: auto; padding: 20px; }
+    #reader { width: 100%; }
+    #producto { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
+  </style>
+</head>
+<body>
+<div class="container">
+<nav style="background: #333; padding: 10px;">
+  <a href="./sistema/crear_producto.php" style="color: white; margin-right: 20px; text-decoration: none;">➕ Agregar producto</a>
+  <a href="scanner.html" style="color: white; text-decoration: none;">📷 Escanear QR</a>
+  <a href="./sistema/listar_productos.php" style="color: white; text-decoration: none;">📋 Listar productos</a>
+</nav>
+
+
+<h2>📷 Escanear Código QR del Producto</h2>
+<div id="reader"></div>
+
+<div id="producto">
+  <h3>Datos del producto</h3>
+  <div id="detalles"></div>
+</div>
+</div>
+<script>
+const detallesDiv = document.getElementById("detalles");
+
+function mostrarProducto(data) {
+    if (data.error) {
+        detallesDiv.innerHTML = "<p><strong>❌ Producto no encontrado.</strong></p>";
+        return;
+    }
+
+    detallesDiv.innerHTML = `
+        <p><strong>Nombre:</strong> ${data.nombre}</p>
+        <p><strong>Marca:</strong> ${data.marca}</p>
+        <p><strong>Presentación:</strong> ${data.presentacion}</p>
+        <p><strong>Precio:</strong> $${data.precio}</p>
+        <p><strong>Vence:</strong> ${data.fecha_vencimiento}</p>
+        <p><strong>Stock:</strong> ${data.stock_actual}</p>
+    `;
+}
+
+function buscarProducto(codigoQR) {
+    fetch(`sistema/obtener_producto.php?codigo_qr=${codigoQR}`)
+        .then(res => res.json())
+        .then(data => mostrarProducto(data))
+        .catch(err => {
+            detallesDiv.innerHTML = "<p>Error al buscar el producto.</p>";
+        });
+}
+
+// Iniciar cámara
+const qrScanner = new Html5Qrcode("reader");
+
+qrScanner.start(
+    { facingMode: "environment" },
+    {
+        fps: 10,
+        qrbox: 250
+    },
+    qrCodeMessage => {
+        qrScanner.stop(); // Detener escaneo después de encontrar uno
+        buscarProducto(qrCodeMessage);
+    },
+    errorMessage => {
+        // Ignorar errores de escaneo en tiempo real
+    }
+);
+</script>
+
+</body>
+</html>
